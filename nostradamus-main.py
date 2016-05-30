@@ -5,22 +5,20 @@ import sys
 
 from clarifai.client import ClarifaiApi
 
-all_images = {}
-list_of_filenames = []
+images = []
 
 def tag_images_in_directory(path, api):
-	images = []
 
 	path = path.rstrip(os.sep)
 	print("Stripped path is: " + path)
 
 	for file_name in os.listdir(path):
-		list_of_filenames.append(file_name)
+
 		images.append((open(os.path.join(path, file_name), 'rb'), file_name))
 	return api.tag_images(images)
 
 
-def format_tags_with_filenames(clarifai_response, list_of_filenames, path):
+def format_tags_with_filenames(clarifai_response, images):
 	"""
 	So what this should do is take the response given from tagging
 	and map each filename to an array of the top 5 response's tags for the image.
@@ -30,11 +28,16 @@ def format_tags_with_filenames(clarifai_response, list_of_filenames, path):
 		}
 
 	"""
-	
+	image_and_tags_dict = {}
 
+	i=0
 
+	while i < len(images):
 
+		image_and_tags_dict[str(images[i])] = clarifai_response['results'][i]['result']['tag']['classes'][0:5]
+		i += 1
 
+	print(image_and_tags_dict)
 
 def rename_images_in_directory_with_tags():
 	"""
@@ -48,6 +51,8 @@ def rename_images_in_directory_with_tags():
 			- hot_girl_model_young_brunette.jpg
 			- ugly_boy_beast_abomination_awful.jpg
 	"""
+
+
 
 
 def main(argv):
@@ -64,6 +69,8 @@ def main(argv):
 
   elif os.path.isdir(imageurl):
     response = tag_images_in_directory(imageurl, api)
+
+    format_tags_with_filenames(response, images)
 
   elif os.path.isfile(imageurl):
     with open(imageurl,'rb') as image_file:
